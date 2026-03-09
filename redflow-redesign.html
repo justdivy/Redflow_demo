@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RedFlow — Blood Donation & Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #E11D28;
+      --red-deep: #9B0E14;
+      --red-bright: #FF3A42;
+      --red-glow: rgba(225,29,40,0.35);
+      --dark: #0A0A0B;
+      --dark2: #111114;
+      --dark3: #18181C;
+      --dark4: #222228;
+      --dark5: #2C2C34;
+      --white: #F9F5F2;
+      --white2: #EDE8E3;
+      --muted: #7A7580;
+      --card-bg: rgba(255,255,255,0.03);
+      --border: rgba(255,255,255,0.07);
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--dark);
+      color: var(--white);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Grain overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 999; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 48px;
+      background: linear-gradient(180deg, rgba(10,10,11,0.95) 0%, transparent 100%);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      letter-spacing: 0.05em;
+      color: var(--white);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .nav-logo .drop { color: var(--red); display: inline-block; animation: pulse-drop 2s ease-in-out infinite; }
+    @keyframes pulse-drop {
+      0%,100% { transform: scale(1); filter: drop-shadow(0 0 6px var(--red-glow)); }
+      50% { transform: scale(1.15); filter: drop-shadow(0 0 16px var(--red-glow)); }
+    }
+    .nav-links { display: flex; gap: 32px; }
+    .nav-links a {
+      color: var(--muted); font-size: 0.875rem; font-weight: 500;
+      text-decoration: none; letter-spacing: 0.03em;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-cta {
+      background: var(--red); color: var(--white) !important;
+      padding: 9px 22px; border-radius: 4px;
+      font-weight: 600 !important; letter-spacing: 0.04em;
+      transition: background 0.2s, transform 0.15s !important;
+    }
+    .nav-cta:hover { background: var(--red-bright) !important; transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative; min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 120px 48px 80px;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 80% 50%, rgba(155,14,20,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(225,29,40,0.08) 0%, transparent 60%),
+        var(--dark);
+    }
+    /* Animated blood drop particles */
+    .hero-particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    .particle {
+      position: absolute;
+      width: 4px; height: 6px;
+      background: var(--red);
+      border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%;
+      opacity: 0;
+      animation: fall linear infinite;
+      filter: blur(0.5px);
+    }
+    @keyframes fall {
+      0% { transform: translateY(-20px) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.6; }
+      90% { opacity: 0.2; }
+      100% { transform: translateY(100vh) rotate(20deg); opacity: 0; }
+    }
+
+    .hero-content { position: relative; z-index: 1; max-width: 700px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(225,29,40,0.12); border: 1px solid rgba(225,29,40,0.3);
+      color: var(--red-bright); font-size: 0.75rem; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 6px 14px; border-radius: 100px;
+      margin-bottom: 28px;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-badge .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--red-bright);
+      animation: blink 1.4s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.2} }
+
+    h1 {
+      font-family: var(--font-display);
+      font-size: clamp(4rem, 9vw, 8rem);
+      line-height: 0.95;
+      letter-spacing: 0.02em;
+      color: var(--white);
+      animation: fadeUp 0.7s 0.1s ease both;
+    }
+    h1 .accent { color: var(--red); position: relative; }
+    h1 .accent::after {
+      content: '';
+      position: absolute; bottom: 4px; left: 0; right: 0; height: 3px;
+      background: var(--red);
+      transform: scaleX(0); transform-origin: left;
+      animation: underlineIn 0.6s 0.9s ease both;
+    }
+    @keyframes underlineIn { to { transform: scaleX(1); } }
+
+    .hero-sub {
+      margin-top: 28px;
+      font-size: 1.125rem; font-weight: 300;
+      color: var(--muted); max-width: 480px; line-height: 1.7;
+      animation: fadeUp 0.7s 0.25s ease both;
+    }
+
+    .hero-actions {
+      margin-top: 44px; display: flex; gap: 16px; flex-wrap: wrap;
+      animation: fadeUp 0.7s 0.35s ease both;
+    }
+    .btn-primary {
+      background: var(--red); color: var(--white);
+      padding: 14px 32px; border-radius: 4px;
+      font-family: var(--font-body); font-size: 0.9rem; font-weight: 600;
+      letter-spacing: 0.04em; text-decoration: none;
+      border: none; cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 0 0 rgba(225,29,40,0);
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary:hover {
+      background: var(--red-bright);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(225,29,40,0.4);
+    }
+    .btn-outline {
+      background: transparent; color: var(--white);
+      padding: 14px 32px; border-radius: 4px;
+      font-family: var(--font-body); font-size: 0.9rem; font-weight: 500;
+      letter-spacing: 0.04em; text-decoration: none;
+      border: 1px solid var(--border); cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, transform 0.15s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-outline:hover { border-color: var(--red); color: var(--red); transform: translateY(-2px); }
+
+    .hero-stats {
+      margin-top: 60px; display: flex; gap: 40px;
+      animation: fadeUp 0.7s 0.45s ease both;
+    }
+    .stat-item { display: flex; flex-direction: column; gap: 2px; }
+    .stat-number { font-family: var(--font-display); font-size: 2rem; color: var(--white); letter-spacing: 0.05em; }
+    .stat-label { font-size: 0.75rem; color: var(--muted); font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; }
+    .stat-divider { width: 1px; background: var(--border); align-self: stretch; }
+
+    /* Big blood drop SVG */
+    .hero-visual {
+      position: absolute; right: -80px; top: 50%; transform: translateY(-50%);
+      z-index: 0; pointer-events: none;
+      animation: floatDrop 5s ease-in-out infinite;
+    }
+    @keyframes floatDrop { 0%,100%{transform:translateY(-50%) translateX(0)}50%{transform:translateY(-53%) translateX(-10px)} }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── BLOOD TYPES TICKER ── */
+    .ticker-wrap {
+      background: var(--red); padding: 12px 0;
+      overflow: hidden; position: relative;
+    }
+    .ticker {
+      display: flex; gap: 0;
+      animation: ticker 18s linear infinite;
+      width: max-content;
+    }
+    @keyframes ticker { from{transform:translateX(0)}to{transform:translateX(-50%)} }
+    .ticker-item {
+      white-space: nowrap; padding: 0 32px;
+      font-family: var(--font-display); font-size: 1.2rem; letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.9);
+    }
+    .ticker-item span { color: rgba(255,255,255,0.4); margin: 0 12px; }
+
+    /* ── SECTION WRAPPER ── */
+    section { padding: 96px 48px; }
+    .section-label {
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--red);
+      font-family: var(--font-mono);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      line-height: 1; letter-spacing: 0.03em;
+      color: var(--white);
+      margin-bottom: 20px;
+    }
+    .section-sub {
+      font-size: 1rem; color: var(--muted); max-width: 480px; line-height: 1.7;
+    }
+
+    /* ── ROLES SECTION ── */
+    .roles-section { background: var(--dark2); }
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2px; margin-top: 56px;
+    }
+    .role-card {
+      background: var(--dark3); padding: 36px 28px;
+      position: relative; overflow: hidden;
+      cursor: default;
+      transition: background 0.3s;
+    }
+    .role-card::before {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+      background: var(--red); transform: scaleX(0); transform-origin: left;
+      transition: transform 0.35s ease;
+    }
+    .role-card:hover { background: var(--dark4); }
+    .role-card:hover::before { transform: scaleX(1); }
+    .role-icon {
+      font-size: 2.5rem; margin-bottom: 20px;
+      display: block;
+      transition: transform 0.3s;
+    }
+    .role-card:hover .role-icon { transform: scale(1.15); }
+    .role-name {
+      font-family: var(--font-display); font-size: 1.6rem;
+      letter-spacing: 0.06em; color: var(--white);
+      margin-bottom: 8px;
+    }
+    .role-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+    .role-tag {
+      display: inline-block; margin-top: 16px;
+      font-family: var(--font-mono); font-size: 0.65rem; font-weight: 500;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--red); border: 1px solid rgba(225,29,40,0.3);
+      padding: 4px 10px; border-radius: 2px;
+    }
+
+    /* ── FEATURES ── */
+    .features-section { background: var(--dark); }
+    .features-layout {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+      align-items: start; margin-top: 64px;
+    }
+    .feature-list { display: flex; flex-direction: column; gap: 0; }
+    .feature-item {
+      padding: 28px 0; border-bottom: 1px solid var(--border);
+      display: flex; gap: 20px; align-items: flex-start;
+      cursor: pointer;
+      transition: padding-left 0.2s;
+    }
+    .feature-item:hover { padding-left: 8px; }
+    .feature-item:first-child { border-top: 1px solid var(--border); }
+    .feature-num {
+      font-family: var(--font-mono); font-size: 0.7rem;
+      color: var(--red); opacity: 0.7; padding-top: 4px;
+      min-width: 28px;
+    }
+    .feature-content h3 {
+      font-family: var(--font-body); font-size: 1rem; font-weight: 600;
+      color: var(--white); margin-bottom: 6px;
+    }
+    .feature-content p { font-size: 0.875rem; color: var(--muted); line-height: 1.6; }
+    .feature-arrow { margin-left: auto; color: var(--muted); opacity: 0; transition: opacity 0.2s, transform 0.2s; padding-top: 2px; }
+    .feature-item:hover .feature-arrow { opacity: 1; transform: translateX(4px); color: var(--red); }
+
+    /* Dashboard Preview */
+    .dashboard-preview {
+      position: relative;
+      border-radius: 8px; overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px var(--border);
+    }
+    .dash-topbar {
+      background: var(--dark3); padding: 12px 18px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dash-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dash-title { margin-left: auto; font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); }
+    .dash-body { background: var(--dark2); padding: 20px; }
+    .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .dash-card {
+      background: var(--dark3); border: 1px solid var(--border);
+      border-radius: 6px; padding: 16px;
+    }
+    .dash-card-label { font-size: 0.65rem; color: var(--muted); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+    .dash-card-value { font-family: var(--font-display); font-size: 2rem; letter-spacing: 0.05em; }
+    .dash-card-value.red { color: var(--red); }
+    .dash-card-value.green { color: #22C55E; }
+    .dash-card-value.blue { color: #38BDF8; }
+    .dash-card-value.orange { color: #FB923C; }
+    .dash-card-sub { font-size: 0.65rem; color: var(--muted); margin-top: 4px; }
+
+    /* Blood group mini bars */
+    .blood-bars { margin-top: 12px; }
+    .blood-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .blood-type { font-family: var(--font-mono); font-size: 0.7rem; color: var(--white); width: 24px; text-align: right; }
+    .blood-track { flex: 1; height: 5px; background: var(--dark4); border-radius: 2px; overflow: hidden; }
+    .blood-fill { height: 100%; border-radius: 2px; animation: growBar 1.2s ease both; }
+    @keyframes growBar { from{width:0!important} }
+    .blood-count { font-family: var(--font-mono); font-size: 0.65rem; color: var(--muted); width: 20px; }
+
+    /* Recent activity */
+    .activity-list { background: var(--dark3); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .activity-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 0.7rem; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    .activity-row { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .activity-row:last-child { border-bottom: none; }
+    .activity-avatar { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; }
+    .activity-info { flex: 1; }
+    .activity-name { font-size: 0.75rem; color: var(--white); font-weight: 500; }
+    .activity-action { font-size: 0.65rem; color: var(--muted); }
+    .activity-time { font-family: var(--font-mono); font-size: 0.6rem; color: var(--muted); }
+    .activity-badge { font-size: 0.6rem; padding: 2px 8px; border-radius: 2px; font-family: var(--font-mono); font-weight: 600; }
+    .badge-red { background: rgba(225,29,40,0.15); color: var(--red-bright); }
+    .badge-green { background: rgba(34,197,94,0.15); color: #22C55E; }
+    .badge-yellow { background: rgba(234,179,8,0.15); color: #EAB308; }
+
+    /* ── TECH STACK ── */
+    .tech-section { background: var(--dark3); }
+    .tech-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1px; margin-top: 56px;
+      border: 1px solid var(--border);
+    }
+    .tech-item {
+      background: var(--dark2); padding: 32px 24px;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      transition: background 0.2s;
+      position: relative;
+    }
+    .tech-item:hover { background: var(--dark4); }
+    .tech-logo { font-size: 2.2rem; }
+    .tech-name { font-family: var(--font-display); font-size: 1.2rem; letter-spacing: 0.07em; }
+    .tech-type { font-family: var(--font-mono); font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+    /* ── HOW IT WORKS ── */
+    .how-section { background: var(--dark); }
+    .steps-row {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 0; margin-top: 64px;
+      position: relative;
+    }
+    .steps-row::before {
+      content: ''; position: absolute;
+      top: 28px; left: calc(12.5%); right: calc(12.5%); height: 1px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+    }
+    .step { padding: 0 24px; text-align: center; }
+    .step-circle {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--dark3); border: 2px solid var(--red);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px;
+      font-family: var(--font-display); font-size: 1.4rem; color: var(--red);
+      position: relative; z-index: 1;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .step:hover .step-circle { background: var(--red); color: var(--white); transform: scale(1.1); }
+    .step h3 { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 8px; }
+    .step p { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── BLOOD REQUEST UI ── */
+    .request-section { background: var(--dark2); }
+    .request-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; margin-top: 64px; }
+    .request-form {
+      background: var(--dark3); border: 1px solid var(--border); border-radius: 8px;
+      padding: 36px; position: relative; overflow: hidden;
+    }
+    .request-form::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--red-deep), var(--red-bright));
+    }
+    .form-title { font-family: var(--font-display); font-size: 1.8rem; letter-spacing: 0.05em; margin-bottom: 28px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    .form-label { font-size: 0.7rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+    .form-input {
+      background: var(--dark4); border: 1px solid var(--border);
+      border-radius: 4px; padding: 10px 14px;
+      font-family: var(--font-body); font-size: 0.875rem; color: var(--white);
+      outline: none; transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: var(--red); }
+    .form-input::placeholder { color: var(--dark5); }
+    .blood-type-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .blood-type-btn {
+      background: var(--dark4); border: 1px solid var(--border);
+      border-radius: 4px; padding: 10px;
+      font-family: var(--font-display); font-size: 1.1rem;
+      color: var(--muted); cursor: pointer; text-align: center;
+      transition: all 0.2s;
+    }
+    .blood-type-btn:hover { border-color: var(--red); color: var(--red); }
+    .blood-type-btn.active { background: var(--red); border-color: var(--red); color: var(--white); }
+
+    .urgency-row { display: flex; gap: 8px; }
+    .urgency-btn {
+      flex: 1; padding: 9px; border-radius: 4px; cursor: pointer;
+      font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em; text-align: center;
+      transition: all 0.2s; border: 1px solid transparent;
+    }
+    .urgency-btn.low { background: rgba(34,197,94,0.1); color: #22C55E; border-color: rgba(34,197,94,0.2); }
+    .urgency-btn.medium { background: rgba(234,179,8,0.1); color: #EAB308; border-color: rgba(234,179,8,0.2); }
+    .urgency-btn.high { background: rgba(225,29,40,0.15); color: var(--red-bright); border-color: rgba(225,29,40,0.3); }
+    .urgency-btn.active-high { background: var(--red); color: var(--white); border-color: var(--red); }
+
+    .request-info h3 { font-family: var(--font-display); font-size: 2.5rem; line-height: 1; margin-bottom: 20px; }
+    .info-list { display: flex; flex-direction: column; gap: 16px; margin-top: 32px; }
+    .info-row { display: flex; gap: 14px; align-items: flex-start; }
+    .info-icon { color: var(--red); font-size: 1.2rem; flex-shrink: 0; }
+    .info-text h4 { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 2px; }
+    .info-text p { font-size: 0.8rem; color: var(--muted); }
+
+    /* ── CTA BANNER ── */
+    .cta-section {
+      background: var(--red); padding: 80px 48px;
+      position: relative; overflow: hidden;
+    }
+    .cta-section::before {
+      content: 'REDFLOW'; position: absolute;
+      right: -20px; top: 50%; transform: translateY(-50%);
+      font-family: var(--font-display); font-size: 16rem; letter-spacing: 0.02em;
+      color: rgba(0,0,0,0.15); line-height: 1; pointer-events: none;
+      white-space: nowrap;
+    }
+    .cta-inner { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
+    .cta-text h2 { font-family: var(--font-display); font-size: clamp(2.5rem, 5vw, 4rem); line-height: 1; color: var(--white); }
+    .cta-text p { color: rgba(255,255,255,0.7); margin-top: 12px; font-size: 1rem; }
+    .btn-white {
+      background: var(--white); color: var(--red);
+      padding: 15px 36px; border-radius: 4px;
+      font-family: var(--font-body); font-size: 0.9rem; font-weight: 700;
+      letter-spacing: 0.04em; text-decoration: none; white-space: nowrap;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-white:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,0.25); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--dark2); padding: 60px 48px 32px;
+      border-top: 1px solid var(--border);
+    }
+    .footer-top {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px;
+      margin-bottom: 48px;
+    }
+    .footer-brand .logo { font-family: var(--font-display); font-size: 2rem; color: var(--white); letter-spacing: 0.05em; }
+    .footer-brand .logo .drop { color: var(--red); }
+    .footer-brand p { margin-top: 12px; font-size: 0.85rem; color: var(--muted); line-height: 1.7; max-width: 280px; }
+    .footer-col h4 { font-size: 0.7rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.15em; color: var(--muted); margin-bottom: 16px; }
+    .footer-col a { display: block; font-size: 0.875rem; color: var(--muted); text-decoration: none; margin-bottom: 10px; transition: color 0.2s; }
+    .footer-col a:hover { color: var(--white); }
+    .footer-bottom { display: flex; align-items: center; justify-content: space-between; padding-top: 28px; border-top: 1px solid var(--border); }
+    .footer-bottom p { font-size: 0.8rem; color: var(--muted); }
+    .footer-tech { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); }
+    .footer-tech span { color: var(--red); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--dark); }
+    ::-webkit-scrollbar-thumb { background: var(--red); border-radius: 4px; }
+
+    /* ── MODAL OVERLAY ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--dark2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 48px; max-width: 440px; width: 90%;
+      position: relative;
+      animation: fadeUp 0.3s ease;
+    }
+    .modal-close {
+      position: absolute; top: 16px; right: 20px;
+      background: none; border: none; color: var(--muted); font-size: 1.4rem;
+      cursor: pointer; transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--white); }
+    .modal h2 { font-family: var(--font-display); font-size: 2rem; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .modal p.sub { font-size: 0.875rem; color: var(--muted); margin-bottom: 28px; }
+    .tab-row { display: flex; gap: 0; margin-bottom: 28px; border-bottom: 1px solid var(--border); }
+    .tab-btn {
+      padding: 10px 24px; background: none; border: none; cursor: pointer;
+      font-family: var(--font-body); font-size: 0.875rem; font-weight: 500;
+      color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab-btn.active { color: var(--white); border-bottom-color: var(--red); }
+    .role-select-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .role-select-item {
+      background: var(--dark3); border: 1px solid var(--border); border-radius: 6px;
+      padding: 14px; cursor: pointer; text-align: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .role-select-item:hover { border-color: var(--red); }
+    .role-select-item.selected { border-color: var(--red); background: rgba(225,29,40,0.08); }
+    .role-select-item .ri { font-size: 1.5rem; margin-bottom: 4px; }
+    .role-select-item span { display: block; font-size: 0.75rem; font-weight: 500; color: var(--white); }
+
+    @media(max-width: 900px) {
+      nav { padding: 16px 24px; }
+      .nav-links { display: none; }
+      section { padding: 64px 24px; }
+      .hero { padding: 100px 24px 60px; }
+      .features-layout, .request-layout { grid-template-columns: 1fr; gap: 40px; }
+      .steps-row { grid-template-columns: 1fr 1fr; gap: 32px; }
+      .steps-row::before { display: none; }
+      .footer-top { grid-template-columns: 1fr 1fr; }
+      .hero-visual { display: none; }
+      h1 { font-size: 4rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <span class="drop">🩸</span> REDFLOW
+  </div>
+  <div class="nav-links">
+    <a href="#roles">Roles</a>
+    <a href="#features">Features</a>
+    <a href="#how">How It Works</a>
+    <a href="#request">Request Blood</a>
+    <a href="#" class="nav-cta" onclick="openModal(event)">Sign In</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-particles" id="particles"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="dot"></div>
+      Live System Active
+    </div>
+    <h1>SAVE<br><span class="accent">LIVES</span><br>DONATE</h1>
+    <p class="hero-sub">RedFlow connects donors, hospitals, patients, and admins in one seamless platform — making emergency blood management fast, secure, and reliable.</p>
+    <div class="hero-actions">
+      <a href="#" class="btn-primary" onclick="openModal(event)">
+        🩸 Start Donating
+      </a>
+      <a href="#features" class="btn-outline">
+        Explore Platform →
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-number">5K+</span>
+        <span class="stat-label">Active Donors</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-number">120+</span>
+        <span class="stat-label">Partner Hospitals</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-number">8</span>
+        <span class="stat-label">Blood Types</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Decorative blood drop SVG -->
+  <div class="hero-visual">
+    <svg width="520" height="640" viewBox="0 0 520 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M260 10 C260 10 60 260 60 390 C60 510 150 600 260 600 C370 600 460 510 460 390 C460 260 260 10 260 10Z"
+        fill="url(#dropGrad)" opacity="0.12"/>
+      <path d="M260 60 C260 60 100 290 100 400 C100 500 170 580 260 580 C350 580 420 500 420 400 C420 290 260 60 260 60Z"
+        fill="none" stroke="rgba(225,29,40,0.25)" stroke-width="1.5"/>
+      <path d="M260 120 C260 120 150 310 150 400 C150 480 200 550 260 550 C320 550 370 480 370 400 C370 310 260 120 260 120Z"
+        fill="none" stroke="rgba(225,29,40,0.15)" stroke-width="1"/>
+      <defs>
+        <radialGradient id="dropGrad" cx="50%" cy="60%" r="50%">
+          <stop offset="0%" stop-color="#E11D28"/>
+          <stop offset="100%" stop-color="#9B0E14"/>
+        </radialGradient>
+      </defs>
+    </svg>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    <div class="ticker-item">A+ <span>◆</span></div>
+    <div class="ticker-item">A− <span>◆</span></div>
+    <div class="ticker-item">B+ <span>◆</span></div>
+    <div class="ticker-item">B− <span>◆</span></div>
+    <div class="ticker-item">AB+ <span>◆</span></div>
+    <div class="ticker-item">AB− <span>◆</span></div>
+    <div class="ticker-item">O+ <span>◆</span></div>
+    <div class="ticker-item">O− <span>◆</span></div>
+    <div class="ticker-item">DONATE BLOOD <span>◆</span></div>
+    <div class="ticker-item">SAVE LIVES <span>◆</span></div>
+    <div class="ticker-item">EMERGENCY SUPPORT 24/7 <span>◆</span></div>
+    <!-- Duplicate for seamless loop -->
+    <div class="ticker-item">A+ <span>◆</span></div>
+    <div class="ticker-item">A− <span>◆</span></div>
+    <div class="ticker-item">B+ <span>◆</span></div>
+    <div class="ticker-item">B− <span>◆</span></div>
+    <div class="ticker-item">AB+ <span>◆</span></div>
+    <div class="ticker-item">AB− <span>◆</span></div>
+    <div class="ticker-item">O+ <span>◆</span></div>
+    <div class="ticker-item">O− <span>◆</span></div>
+    <div class="ticker-item">DONATE BLOOD <span>◆</span></div>
+    <div class="ticker-item">SAVE LIVES <span>◆</span></div>
+    <div class="ticker-item">EMERGENCY SUPPORT 24/7 <span>◆</span></div>
+  </div>
+</div>
+
+<!-- ROLES -->
+<section class="roles-section" id="roles">
+  <div class="section-label">// platform roles</div>
+  <h2 class="section-title">WHO USES<br>REDFLOW?</h2>
+  <p class="section-sub">Five distinct roles, one unified system. Each dashboard is purpose-built for maximum efficiency.</p>
+  <div class="roles-grid">
+    <div class="role-card">
+      <span class="role-icon">🧑</span>
+      <div class="role-name">USER</div>
+      <div class="role-desc">Browse blood availability, submit requests, and track donation history across all hospitals.</div>
+      <div class="role-tag">Public Access</div>
+    </div>
+    <div class="role-card">
+      <span class="role-icon">🩸</span>
+      <div class="role-name">DONOR</div>
+      <div class="role-desc">Register as a donor, schedule appointments, view personal donation logs and impact stats.</div>
+      <div class="role-tag">Volunteer Role</div>
+    </div>
+    <div class="role-card">
+      <span class="role-icon">🏥</span>
+      <div class="role-name">HOSPITAL</div>
+      <div class="role-desc">Manage blood inventory, process incoming requests, and coordinate with blood banks in real-time.</div>
+      <div class="role-tag">Institutional</div>
+    </div>
+    <div class="role-card">
+      <span class="role-icon">🤕</span>
+      <div class="role-name">PATIENT</div>
+      <div class="role-desc">Submit urgent blood requests, track request status, and receive notifications when blood is secured.</div>
+      <div class="role-tag">Priority Access</div>
+    </div>
+    <div class="role-card">
+      <span class="role-icon">🛠</span>
+      <div class="role-name">ADMIN</div>
+      <div class="role-desc">Full system oversight — manage users, roles, inventory, analytics, and platform configuration.</div>
+      <div class="role-tag">Super Access</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="section-label">// core features</div>
+  <h2 class="section-title">BUILT FOR<br>REAL EMERGENCIES</h2>
+  <div class="features-layout">
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feature-num">01</div>
+        <div class="feature-content">
+          <h3>JWT Authentication & Authorization</h3>
+          <p>Secure token-based login with role-specific permissions. Every API route protected by middleware guards.</p>
+        </div>
+        <div class="feature-arrow">→</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-num">02</div>
+        <div class="feature-content">
+          <h3>Role-Based Dashboards</h3>
+          <p>Personalized interfaces for each user type. Donors see their impact. Admins see the full picture.</p>
+        </div>
+        <div class="feature-arrow">→</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-num">03</div>
+        <div class="feature-content">
+          <h3>Blood Donation Management</h3>
+          <p>End-to-end tracking from donation scheduling to blood unit processing and storage allocation.</p>
+        </div>
+        <div class="feature-arrow">→</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-num">04</div>
+        <div class="feature-content">
+          <h3>Emergency Request System</h3>
+          <p>Flag critical requests by urgency. Hospitals get instant alerts. Patients get real-time status updates.</p>
+        </div>
+        <div class="feature-arrow">→</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-num">05</div>
+        <div class="feature-content">
+          <h3>AI Chat Support</h3>
+          <p>Built-in AI assistant to guide users through the donation process and answer urgent queries 24/7.</p>
+        </div>
+        <div class="feature-arrow">→</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-num">06</div>
+        <div class="feature-content">
+          <h3>Secure REST APIs</h3>
+          <p>All endpoints follow RESTful conventions with proper validation, error handling, and rate limiting.</p>
+        </div>
+        <div class="feature-arrow">→</div>
+      </div>
+    </div>
+
+    <!-- Dashboard Preview -->
+    <div class="dashboard-preview">
+      <div class="dash-topbar">
+        <div class="dash-dot" style="background:#FF5F57"></div>
+        <div class="dash-dot" style="background:#FFBD2E"></div>
+        <div class="dash-dot" style="background:#28CA41"></div>
+        <div class="dash-title">RedFlow Admin Dashboard</div>
+      </div>
+      <div class="dash-body">
+        <div class="dash-grid">
+          <div class="dash-card">
+            <div class="dash-card-label">Total Donors</div>
+            <div class="dash-card-value red">5,284</div>
+            <div class="dash-card-sub">↑ 12% this month</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-label">Units Available</div>
+            <div class="dash-card-value green">1,847</div>
+            <div class="dash-card-sub">Across all types</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-label">Active Requests</div>
+            <div class="dash-card-value orange">34</div>
+            <div class="dash-card-sub">8 critical</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-label">Hospitals</div>
+            <div class="dash-card-value blue">128</div>
+            <div class="dash-card-sub">Verified partners</div>
+          </div>
+        </div>
+
+        <div class="dash-card" style="margin-bottom:12px">
+          <div class="dash-card-label">Blood Type Inventory</div>
+          <div class="blood-bars" style="margin-top:12px">
+            <div class="blood-bar-row"><span class="blood-type">O+</span><div class="blood-track"><div class="blood-fill" style="width:82%;background:var(--red)"></div></div><span class="blood-count">412</span></div>
+            <div class="blood-bar-row"><span class="blood-type">A+</span><div class="blood-track"><div class="blood-fill" style="width:65%;background:#FB923C"></div></div><span class="blood-count">325</span></div>
+            <div class="blood-bar-row"><span class="blood-type">B+</span><div class="blood-track"><div class="blood-fill" style="width:48%;background:#38BDF8"></div></div><span class="blood-count">241</span></div>
+            <div class="blood-bar-row"><span class="blood-type">AB+</span><div class="blood-track"><div class="blood-fill" style="width:30%;background:#22C55E"></div></div><span class="blood-count">150</span></div>
+            <div class="blood-bar-row"><span class="blood-type">O−</span><div class="blood-track"><div class="blood-fill" style="width:22%;background:#A78BFA"></div></div><span class="blood-count">110</span></div>
+            <div class="blood-bar-row"><span class="blood-type">A−</span><div class="blood-track"><div class="blood-fill" style="width:15%;background:#F472B6"></div></div><span class="blood-count">76</span></div>
+          </div>
+        </div>
+
+        <div class="activity-list">
+          <div class="activity-header">Recent Activity</div>
+          <div class="activity-row">
+            <div class="activity-avatar" style="background:rgba(225,29,40,0.2);color:var(--red)">AR</div>
+            <div class="activity-info">
+              <div class="activity-name">Arjun Rawat</div>
+              <div class="activity-action">Donated 1 unit · B+</div>
+            </div>
+            <div class="activity-time">2m ago</div>
+            <div class="activity-badge badge-green">DONE</div>
+          </div>
+          <div class="activity-row">
+            <div class="activity-avatar" style="background:rgba(251,146,60,0.2);color:#FB923C">CH</div>
+            <div class="activity-info">
+              <div class="activity-name">City Hospital</div>
+              <div class="activity-action">Emergency request · O−</div>
+            </div>
+            <div class="activity-time">5m ago</div>
+            <div class="activity-badge badge-red">URGENT</div>
+          </div>
+          <div class="activity-row">
+            <div class="activity-avatar" style="background:rgba(56,189,248,0.2);color:#38BDF8">PK</div>
+            <div class="activity-info">
+              <div class="activity-name">Priya Kapoor</div>
+              <div class="activity-action">Registered as donor · A+</div>
+            </div>
+            <div class="activity-time">12m ago</div>
+            <div class="activity-badge badge-yellow">NEW</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-label">// process</div>
+  <h2 class="section-title">HOW IT WORKS</h2>
+  <p class="section-sub">From registration to transfusion — a streamlined 4-step journey.</p>
+  <div class="steps-row">
+    <div class="step">
+      <div class="step-circle">1</div>
+      <h3>Register & Verify</h3>
+      <p>Create an account, choose your role, verify your identity, and complete your health profile.</p>
+    </div>
+    <div class="step">
+      <div class="step-circle">2</div>
+      <h3>Submit or Donate</h3>
+      <p>Patients submit blood requests with urgency levels. Donors schedule appointments nearby.</p>
+    </div>
+    <div class="step">
+      <div class="step-circle">3</div>
+      <h3>Hospital Matches</h3>
+      <p>The system auto-matches available blood units to requests based on type, urgency, and location.</p>
+    </div>
+    <div class="step">
+      <div class="step-circle">4</div>
+      <h3>Track & Confirm</h3>
+      <p>Real-time status updates notify all parties. Admins review analytics and system health.</p>
+    </div>
+  </div>
+</section>
+
+<!-- BLOOD REQUEST FORM DEMO -->
+<section class="request-section" id="request">
+  <div class="section-label">// request blood</div>
+  <div class="request-layout">
+    <div class="request-form">
+      <div class="form-title">REQUEST BLOOD</div>
+      <div class="form-row">
+        <div class="form-group">
+          <div class="form-label">Patient Name</div>
+          <input class="form-input" placeholder="Full name" type="text" />
+        </div>
+        <div class="form-group">
+          <div class="form-label">Hospital</div>
+          <input class="form-input" placeholder="Hospital name" type="text" />
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Blood Type Needed</div>
+        <div class="blood-type-grid" id="bloodTypeGrid">
+          <div class="blood-type-btn" onclick="selectBlood(this)">A+</div>
+          <div class="blood-type-btn" onclick="selectBlood(this)">A−</div>
+          <div class="blood-type-btn" onclick="selectBlood(this)">B+</div>
+          <div class="blood-type-btn" onclick="selectBlood(this)">B−</div>
+          <div class="blood-type-btn" onclick="selectBlood(this)">AB+</div>
+          <div class="blood-type-btn" onclick="selectBlood(this)">AB−</div>
+          <div class="blood-type-btn active" onclick="selectBlood(this)">O+</div>
+          <div class="blood-type-btn" onclick="selectBlood(this)">O−</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <div class="form-label">Units Required</div>
+          <input class="form-input" placeholder="e.g. 2" type="number" min="1" />
+        </div>
+        <div class="form-group">
+          <div class="form-label">Required By</div>
+          <input class="form-input" type="date" />
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Urgency Level</div>
+        <div class="urgency-row">
+          <div class="urgency-btn low">Low</div>
+          <div class="urgency-btn medium">Medium</div>
+          <div class="urgency-btn high active-high">Critical</div>
+        </div>
+      </div>
+      <button class="btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="submitRequest()">
+        🩸 Submit Request
+      </button>
+    </div>
+
+    <div class="request-info">
+      <h3>EMERGENCY? WE RESPOND IN MINUTES.</h3>
+      <p class="section-sub">Our network of partner hospitals and verified donors ensures blood is available when every second counts.</p>
+      <div class="info-list">
+        <div class="info-row">
+          <div class="info-icon">⚡</div>
+          <div class="info-text">
+            <h4>Real-Time Matching</h4>
+            <p>Requests are matched to available units instantly based on blood type and proximity.</p>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-icon">🔔</div>
+          <div class="info-text">
+            <h4>Instant Notifications</h4>
+            <p>Donors and hospitals receive SMS/push alerts for critical and emergency requests.</p>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-icon">🛡</div>
+          <div class="info-text">
+            <h4>Verified & Secure</h4>
+            <p>All donors are health-screened. All hospitals are verified. All data is encrypted.</p>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-icon">📊</div>
+          <div class="info-text">
+            <h4>Full Audit Trail</h4>
+            <p>Every donation and request is logged, tracked, and reportable for compliance.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section class="tech-section" id="stack">
+  <div class="section-label">// built with</div>
+  <h2 class="section-title">THE STACK</h2>
+  <p class="section-sub">Production-grade technologies chosen for performance, security, and developer experience.</p>
+  <div class="tech-grid">
+    <div class="tech-item">
+      <div class="tech-logo">⚛️</div>
+      <div class="tech-name">REACT</div>
+      <div class="tech-type">Frontend</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-logo">⚡</div>
+      <div class="tech-name">VITE</div>
+      <div class="tech-type">Build Tool</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-logo">🟢</div>
+      <div class="tech-name">NODE.JS</div>
+      <div class="tech-type">Runtime</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-logo">🚂</div>
+      <div class="tech-name">EXPRESS</div>
+      <div class="tech-type">Backend</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-logo">🍃</div>
+      <div class="tech-name">MONGODB</div>
+      <div class="tech-type">Database</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-logo">🔑</div>
+      <div class="tech-name">JWT</div>
+      <div class="tech-type">Auth</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-logo">🌊</div>
+      <div class="tech-name">TAILWIND</div>
+      <div class="tech-type">Styling</div>
+    </div>
+    <div class="tech-item">
+      <div class="tech-logo">▲</div>
+      <div class="tech-name">VERCEL</div>
+      <div class="tech-type">Deployment</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-inner">
+    <div class="cta-text">
+      <h2>ONE DROP CAN<br>SAVE THREE LIVES.</h2>
+      <p>Join 5,000+ donors already on RedFlow. It only takes a few minutes to register.</p>
+    </div>
+    <a href="#" class="btn-white" onclick="openModal(event)">
+      🩸 Join RedFlow Now
+    </a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="logo"><span class="drop">🩸</span> REDFLOW</div>
+      <p>A full-stack Blood Donation & Blood Bank Management System. Connecting lives through technology.</p>
+      <p style="margin-top:16px;font-size:0.75rem;font-family:var(--font-mono)">
+        <a href="https://redflow.vercel.app" style="color:var(--red);text-decoration:none">redflow.vercel.app</a>
+      </p>
+    </div>
+    <div class="footer-col">
+      <h4>Platform</h4>
+      <a href="#">Dashboard</a>
+      <a href="#">Donate Blood</a>
+      <a href="#">Request Blood</a>
+      <a href="#">Find Hospitals</a>
+      <a href="#">Blood Inventory</a>
+    </div>
+    <div class="footer-col">
+      <h4>Roles</h4>
+      <a href="#">Donor Portal</a>
+      <a href="#">Hospital Login</a>
+      <a href="#">Patient Access</a>
+      <a href="#">Admin Panel</a>
+    </div>
+    <div class="footer-col">
+      <h4>Project</h4>
+      <a href="https://github.com/justdivy/redflow">GitHub Repo</a>
+      <a href="#">API Docs</a>
+      <a href="#">Report Bug</a>
+      <a href="#">Contact Dev</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 RedFlow by <span style="color:var(--white)">justdivy</span>. Open Source.</p>
+    <div class="footer-tech">Built with <span>MERN Stack</span> · Deployed on <span>Vercel + Render</span></div>
+  </div>
+</footer>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2>WELCOME TO<br><span style="color:var(--red)">REDFLOW</span></h2>
+    <p class="sub">Sign in to your account or create a new one.</p>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab(this,'login')">Sign In</button>
+      <button class="tab-btn" onclick="switchTab(this,'register')">Register</button>
+    </div>
+    <div id="loginTab">
+      <div class="form-group">
+        <div class="form-label">Email</div>
+        <input class="form-input" placeholder="you@example.com" type="email" style="width:100%" />
+      </div>
+      <div class="form-group">
+        <div class="form-label">Password</div>
+        <input class="form-input" placeholder="••••••••" type="password" style="width:100%" />
+      </div>
+      <button class="btn-primary" style="width:100%;justify-content:center;margin-top:8px">Sign In →</button>
+    </div>
+    <div id="registerTab" style="display:none">
+      <div class="form-label" style="margin-bottom:10px">Select Your Role</div>
+      <div class="role-select-grid">
+        <div class="role-select-item selected" onclick="selectRole(this)">
+          <div class="ri">🩸</div><span>Donor</span>
+        </div>
+        <div class="role-select-item" onclick="selectRole(this)">
+          <div class="ri">🤕</div><span>Patient</span>
+        </div>
+        <div class="role-select-item" onclick="selectRole(this)">
+          <div class="ri">🏥</div><span>Hospital</span>
+        </div>
+        <div class="role-select-item" onclick="selectRole(this)">
+          <div class="ri">🧑</div><span>User</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Full Name</div>
+        <input class="form-input" placeholder="Your full name" type="text" style="width:100%" />
+      </div>
+      <div class="form-group">
+        <div class="form-label">Email</div>
+        <input class="form-input" placeholder="you@example.com" type="email" style="width:100%" />
+      </div>
+      <div class="form-group">
+        <div class="form-label">Password</div>
+        <input class="form-input" placeholder="Min 8 characters" type="password" style="width:100%" />
+      </div>
+      <button class="btn-primary" style="width:100%;justify-content:center;margin-top:8px">Create Account →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Particle generator
+  const container = document.getElementById('particles');
+  for(let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDelay = Math.random() * 12 + 's';
+    p.style.animationDuration = (8 + Math.random() * 10) + 's';
+    p.style.opacity = 0.2 + Math.random() * 0.5;
+    p.style.width = (3 + Math.random() * 4) + 'px';
+    p.style.height = (5 + Math.random() * 7) + 'px';
+    container.appendChild(p);
+  }
+
+  // Blood type selector
+  function selectBlood(el) {
+    document.querySelectorAll('.blood-type-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // Urgency selector
+  document.querySelectorAll('.urgency-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.urgency-btn').forEach(b => b.classList.remove('active-high'));
+      this.classList.add('active-high');
+    });
+  });
+
+  // Modal
+  function openModal(e) { e.preventDefault(); document.getElementById('authModal').classList.add('active'); }
+  function closeModal() { document.getElementById('authModal').classList.remove('active'); }
+  document.getElementById('authModal').addEventListener('click', function(e) {
+    if(e.target === this) closeModal();
+  });
+
+  // Tab switch
+  function switchTab(el, tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('loginTab').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('registerTab').style.display = tab === 'register' ? 'block' : 'none';
+  }
+
+  // Role select
+  function selectRole(el) {
+    document.querySelectorAll('.role-select-item').forEach(r => r.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  // Submit request
+  function submitRequest() {
+    const btn = event.target;
+    btn.textContent = '✓ Request Submitted!';
+    btn.style.background = '#22C55E';
+    setTimeout(() => {
+      btn.textContent = '🩸 Submit Request';
+      btn.style.background = '';
+    }, 3000);
+  }
+
+  // Animate elements into view
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if(e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.role-card, .tech-item, .step, .feature-item').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>
